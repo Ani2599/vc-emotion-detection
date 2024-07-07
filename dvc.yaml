@@ -42,5 +42,6 @@ stages:
     metrics:
     - reports/metrics.json
 
-params:
-- dvclive/params.yaml
+
+
+
