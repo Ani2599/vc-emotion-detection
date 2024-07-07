@@ -4,6 +4,7 @@ import pickle
 import json
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import logging
+from dvclive import Live
 
 # logging configuration
 logger = logging.getLogger('model_evaluation')
@@ -99,3 +100,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+	
