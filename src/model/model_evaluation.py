@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import pickle
 import json
+import yaml
 from sklearn.metrics import accuracy_score, precision_score, recall_score, roc_auc_score
 import logging
 from dvclive import Live
@@ -83,21 +84,47 @@ def save_metrics(metrics: dict, file_path: str) -> None:
         logger.error('Error occurred while saving the metrics: %s', e)
         raise
 
+def load_params(file_path: str) -> dict:
+    """Load parameters from a YAML file."""
+    try:
+        with open(file_path, 'r') as file:
+            params = yaml.safe_load(file)
+        logger.debug('Parameters loaded from %s', file_path)
+        return params
+    except FileNotFoundError:
+        logger.error('File not found: %s', file_path)
+        raise
+    except Exception as e:
+        logger.error('Unexpected error occurred while loading the parameters: %s', e)
+        raise
+
 def main():
     try:
-        clf = load_model('./models/model.pkl')
-        test_data = load_data('./data/processed/test_tfidf.csv')
-        
-        X_test = test_data.iloc[:, :-1].values
-        y_test = test_data.iloc[:, -1].values
+        with Live() as live:
+            params = load_params('params.yaml')
+            
+            clf = load_model('./models/model.pkl')
+            test_data = load_data('./data/processed/test_tfidf.csv')
+            
+            X_test = test_data.iloc[:, :-1].values
+            y_test = test_data.iloc[:, -1].values
 
-        metrics = evaluate_model(clf, X_test, y_test)
-        
-        save_metrics(metrics, 'reports/metrics.json')
+            metrics = evaluate_model(clf, X_test, y_test)
+            
+            # Log metrics using DVC Live
+            for metric, value in metrics.items():
+                live.log_metric(metric, value)
+
+            # Log params using DVC Live
+            live.log_params(params)
+            
+            save_metrics(metrics, 'reports/metrics.json')
     except Exception as e:
         logger.error('Failed to complete the model evaluation process: %s', e)
         print(f"Error: {e}")
 
 if __name__ == '__main__':
     main()
+
+
 	
